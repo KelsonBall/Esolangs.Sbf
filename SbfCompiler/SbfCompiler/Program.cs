@@ -6,10 +6,10 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 
-namespace ParksComputing.Pbrain
+namespace Esolangs.Sbf
 {
     /// <summary>
-    /// Compiler implements the pbrain compiler.
+    /// Compiler implements the sbf compiler.
     /// </summary>
     class Compiler
     {
@@ -20,7 +20,7 @@ namespace ParksComputing.Pbrain
         {
             //if (args.Length > 0)
             //{
-            string fileName = /*args[0]*/ @"hello.pbf";
+            string fileName = /*args[0]*/ @"hello.sbf";
 
                 Compiler compiler;
                 compiler = new Compiler(fileName);
@@ -38,15 +38,11 @@ namespace ParksComputing.Pbrain
         private FieldBuilder tape;
         private FieldBuilder pointer;
         private FieldBuilder tmp;
-        private FieldBuilder vtbl;
 
         private TypeBuilder myTypeBldr;
 
         private MethodInfo readMI;
         private MethodInfo writeMI;
-
-        private int methodCount;
-        private int callCount;
 
 
         void Ldc(ILGenerator il, int count)
@@ -98,7 +94,7 @@ namespace ParksComputing.Pbrain
 
         void Forward(ILGenerator il, int count)
         {
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldc.i4 1	
@@ -107,14 +103,14 @@ namespace ParksComputing.Pbrain
             //add
             il.Emit(OpCodes.Add);
 
-            //stsfld int32 pbout.pointer
+            //stsfld int32 sbfout.pointer
             il.Emit(OpCodes.Stsfld, pointer);
         }
 
 
         void Back(ILGenerator il, int count)
         {
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldc.i4 1	
@@ -123,17 +119,17 @@ namespace ParksComputing.Pbrain
             //sub
             il.Emit(OpCodes.Sub);
 
-            //stsfld int32 pbout.pointer
+            //stsfld int32 sbfout.pointer
             il.Emit(OpCodes.Stsfld, pointer);
         }
 
 
         void Plus(ILGenerator il, int count)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldelem.i4 
@@ -145,16 +141,16 @@ namespace ParksComputing.Pbrain
             //add
             il.Emit(OpCodes.Add);
 
-            //stsfld int32 pbout.tpointer
+            //stsfld int32 sbfout.tpointer
             il.Emit(OpCodes.Stsfld, tmp);
 
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
-            //ldsfld int32 pbout.tmp	
+            //ldsfld int32 sbfout.tmp	
             il.Emit(OpCodes.Ldsfld, tmp);
 
             //stelem.i4
@@ -164,10 +160,10 @@ namespace ParksComputing.Pbrain
 
         void Minus(ILGenerator il, int count)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldelem.i4 
@@ -179,16 +175,16 @@ namespace ParksComputing.Pbrain
             //sub
             il.Emit(OpCodes.Sub);
 
-            //stsfld int32 pbout.tmp
+            //stsfld int32 sbfout.tmp
             il.Emit(OpCodes.Stsfld, tmp);
 
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
-            //ldsfld int32 pbout.tmp	
+            //ldsfld int32 sbfout.tmp	
             il.Emit(OpCodes.Ldsfld, tmp);
 
             //stelem.i4
@@ -198,10 +194,10 @@ namespace ParksComputing.Pbrain
 
         void Read(ILGenerator il)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //call void [mscorlib]System.Console.Write(char)
@@ -214,10 +210,10 @@ namespace ParksComputing.Pbrain
 
         void Write(ILGenerator il)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldelem.i4 
@@ -230,10 +226,10 @@ namespace ParksComputing.Pbrain
 
         void LoopBegin(ILGenerator il, Label endLabel)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldelem.i4 
@@ -253,10 +249,10 @@ namespace ParksComputing.Pbrain
 
         void Zero(ILGenerator il)
         {
-            //ldsfld int32[] pbout.tape
+            //ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
 
-            //ldsfld int32 pbout.pointer
+            //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldc.i4.0
@@ -293,21 +289,21 @@ namespace ParksComputing.Pbrain
             il.Emit(OpCodes.Ldc_I4, 30000);
             // newarr [mscorlib]System.Int32
             il.Emit(OpCodes.Newarr, typeof(int));
-            // stsfld int32[] pbout.tape
+            // stsfld int32[] sbfout.tape
             il.Emit(OpCodes.Stsfld, tape);
 
             // ldc.i4 0
             il.Emit(OpCodes.Ldc_I4_0);
-            // stsfld int32 pbout.pointer
+            // stsfld int32 sbfout.pointer
             il.Emit(OpCodes.Stsfld, pointer);
 
 
             Parse(il);
 
 
-            // ldsfld int32[] pbout.tape
+            // ldsfld int32[] sbfout.tape
             il.Emit(OpCodes.Ldsfld, tape);
-            // ldsfld int32 pbout.pointer
+            // ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
             // ldelem.i4 
             il.Emit(OpCodes.Ldelem_I4);
@@ -316,12 +312,12 @@ namespace ParksComputing.Pbrain
             il.Emit(OpCodes.Ret);
 
 
-            Type pboutType = myTypeBldr.CreateType();
+            Type sbfoutType = myTypeBldr.CreateType();
             myAsmBldr.SetEntryPoint(mainBldr);
             myAsmBldr.Save(asmFileName);
             Console.WriteLine("Assembly saved as '{0}'.", asmFileName);
 
-            return pboutType;
+            return sbfoutType;
         }
 
 
@@ -338,61 +334,11 @@ namespace ParksComputing.Pbrain
                 {
                     c = (char)n;
                     q.Enqueue(c);
-
-                    if (c == ':')
-                    {
-                        ++callCount;
-                    }
-                }
-
-                if (callCount > 0)
-                {
-                    // .field private static object vtbl
-                    vtbl = myTypeBldr.DefineField("vtbl", typeof(Object), FieldAttributes.Private | FieldAttributes.Static);
-
-                    //newobj instance void [mscorlib]System.Collections.Hashtable..ctor()
-                    Type hashtableType = typeof(System.Collections.Hashtable);
-                    ConstructorInfo constructorInfo = hashtableType.GetConstructor(
-                       (BindingFlags.Instance | BindingFlags.Public),
-                       null,
-                       CallingConventions.HasThis,
-                       System.Type.EmptyTypes,
-                       null
-                       );
-                    il.Emit(OpCodes.Newobj, constructorInfo);
-                    //stsfld object pbout.vtbl
-                    il.Emit(OpCodes.Stsfld, vtbl);
                 }
 
                 Interpret(q, il);
             }
-        }
-
-
-        MethodBuilder Procedure(Queue q)
-        {
-            Type[] temp0 = { myTypeBldr };
-            StringBuilder sb = new StringBuilder();
-            sb.Append("pb_");
-            sb.Append(methodCount);
-            string name = sb.ToString();
-
-            MethodBuilder procBldr = myTypeBldr.DefineMethod(
-               name,
-               (MethodAttributes.Private | MethodAttributes.Static),
-               null,
-               System.Type.EmptyTypes
-               );
-
-            ILGenerator il = procBldr.GetILGenerator();
-
-            Interpret(q, il);
-
-            // ret
-            il.Emit(OpCodes.Ret);
-
-            return procBldr;
-        }
+        }        
 
 
         int CountDuplicates(Queue q, char c)
@@ -428,31 +374,31 @@ namespace ParksComputing.Pbrain
 
                 switch (c)
                 {
-                    case '+':
+                    case '▲':
                         Plus(il, CountDuplicates(q, c));
                         break;
 
-                    case '-':
+                    case '▼':
                         Minus(il, CountDuplicates(q, c));
                         break;
 
-                    case '>':
+                    case '→':
                         Forward(il, CountDuplicates(q, c));
                         break;
 
-                    case '<':
+                    case '←':
                         Back(il, CountDuplicates(q, c));
                         break;
 
-                    case ',':
+                    case '¿':
                         Read(il);
                         break;
 
-                    case '.':
+                    case '¡':
                         Write(il);
                         break;
 
-                    case '[':
+                    case '≤':
                         {
                             if (q.Count > 0)
                             {
@@ -469,11 +415,11 @@ namespace ParksComputing.Pbrain
                                 {
                                     c = (char)q.Dequeue();
 
-                                    if (c == '[')
+                                    if (c == '≤')
                                     {
                                         ++nest;
                                     }
-                                    else if (c == ']')
+                                    else if (c == '≥')
                                     {
                                         if (nest > 0)
                                         {
@@ -488,12 +434,12 @@ namespace ParksComputing.Pbrain
                                     // Check for null loop, [-], which set the current cell
                                     // to zero. There's no need to loop. Just store a zero
                                     // and move on.
-                                    else if (opt && c == '-' && (startPos - q.Count) == 1)
+                                    else if (opt && c == '▼' && (startPos - q.Count) == 1)
                                     {
                                         opt = false;
 
                                         // If the next character is the end of the loop...
-                                        if ((char)q.Peek() == ']')
+                                        if ((char)q.Peek() == '≥')
                                         {
                                             // Eat the ] and stop the loop
                                             c = (char)q.Dequeue();
@@ -539,9 +485,7 @@ namespace ParksComputing.Pbrain
 
         Compiler(string fileNameInit)
         {
-            fileName = fileNameInit;
-            methodCount = 0;
-            callCount = 0;
+            fileName = fileNameInit;            
             asmName = Path.GetFileNameWithoutExtension(fileName);
             asmFileName = Path.GetFileName(Path.ChangeExtension(fileName, ".exe"));
 
@@ -554,7 +498,7 @@ namespace ParksComputing.Pbrain
             writeMI = typeof(Console).GetMethod("Write", temp1);
             readMI = typeof(Console).GetMethod("Read");
 
-            // .class private auto ansi pbout extends [mscorlib]System.Object
+            // .class private auto ansi sbfout extends [mscorlib]System.Object
             ModuleBuilder myModuleBldr = myAsmBldr.DefineDynamicModule(asmFileName, asmFileName);
             myTypeBldr = myModuleBldr.DefineType(asmName);
         }
