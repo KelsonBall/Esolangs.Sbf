@@ -39,13 +39,22 @@ namespace Esolangs.Sbf
         private FieldBuilder pointer;
         private FieldBuilder tmp;
 
+        private FieldBuilder α;
+        private FieldBuilder ß;
+        private FieldBuilder π;
+        private FieldBuilder σ;
+        private FieldBuilder µ;
+        private FieldBuilder δ;
+        private FieldBuilder φ;
+        private FieldBuilder ε;
+
         private TypeBuilder myTypeBldr;
 
         private MethodInfo readMI;
         private MethodInfo writeMI;
 
 
-        void Ldc(ILGenerator il, int count)
+        void Add(ILGenerator il, int count)
         {
             switch (count)
             {
@@ -92,13 +101,13 @@ namespace Esolangs.Sbf
         }
 
 
-        void Forward(ILGenerator il, int count)
+        void IncrementPointer(ILGenerator il, int count)
         {
             //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldc.i4 1	
-            Ldc(il, count);
+            Add(il, count);
 
             //add
             il.Emit(OpCodes.Add);
@@ -108,18 +117,48 @@ namespace Esolangs.Sbf
         }
 
 
-        void Back(ILGenerator il, int count)
+        void DecrementPointer(ILGenerator il, int count)
         {
             //ldsfld int32 sbfout.pointer
             il.Emit(OpCodes.Ldsfld, pointer);
 
             //ldc.i4 1	
-            Ldc(il, count);
+            Add(il, count);
 
             //sub
             il.Emit(OpCodes.Sub);
 
             //stsfld int32 sbfout.pointer
+            il.Emit(OpCodes.Stsfld, pointer);
+        }
+
+        void Reference(ILGenerator il)
+        {
+            // Add tape to stack
+            il.Emit(OpCodes.Ldsfld, tape);
+
+            // Add pointer to stack
+            il.Emit(OpCodes.Ldsfld, pointer);
+
+            // Add pointer to stack
+            il.Emit(OpCodes.Ldsfld, pointer);
+
+            // Set element to pointer
+            il.Emit(OpCodes.Stelem_I4);
+        }
+
+        void Dereference(ILGenerator il)
+        {
+            // Add tape to stack
+            il.Emit(OpCodes.Ldsfld, tape);
+
+            // Add pointer to stack
+            il.Emit(OpCodes.Ldsfld, pointer);
+
+            // Read cell
+            il.Emit(OpCodes.Ldelem_I4);
+
+            // Load cell to pointer
             il.Emit(OpCodes.Stsfld, pointer);
         }
 
@@ -136,7 +175,7 @@ namespace Esolangs.Sbf
             il.Emit(OpCodes.Ldelem_I4);
 
             //ldc.i4 1
-            Ldc(il, count);
+            Add(il, count);
 
             //add
             il.Emit(OpCodes.Add);
@@ -170,7 +209,7 @@ namespace Esolangs.Sbf
             il.Emit(OpCodes.Ldelem_I4);
 
             //ldc.i4 1	
-            Ldc(il, count);
+            Add(il, count);
 
             //sub
             il.Emit(OpCodes.Sub);
@@ -191,6 +230,68 @@ namespace Esolangs.Sbf
             il.Emit(OpCodes.Stelem_I4);
         }
 
+        void Double(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
+
+        void Halve(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
+
+        void SwapRegister(ILGenerator il, FieldBuilder reg)
+        {                        
+            // Add tape to stack
+            il.Emit(OpCodes.Ldsfld, tape);
+
+            // Add pointer to stack
+            il.Emit(OpCodes.Ldsfld, pointer);
+
+            // Add tape[pointer] to stack
+            il.Emit(OpCodes.Ldelem_I4);
+
+            // Set tmp to tape[pointer]
+            il.Emit(OpCodes.Stsfld, tmp);
+
+            // Add tape to stack
+            il.Emit(OpCodes.Ldsfld, tape);
+
+            // Add pointer to stack
+            il.Emit(OpCodes.Ldsfld, pointer);
+
+            // Load selected register to stack
+            il.Emit(OpCodes.Ldsfld, reg);
+
+            // Set tape[pointer] to reg
+            il.Emit(OpCodes.Stelem_I4);
+
+            // Load temp to stack
+            il.Emit(OpCodes.Ldsfld, tmp);
+
+            // Set register to tmp
+            il.Emit(OpCodes.Stsfld, reg);
+        }
+
+        void BinaryNot(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
+
+        void BinaryOr(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
+
+        void BinaryAnd(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
+
+        void BinaryXor(ILGenerator il)
+        {
+            throw new NotImplementedException();
+        }
 
         void Read(ILGenerator il)
         {
@@ -363,7 +464,7 @@ namespace Esolangs.Sbf
 
         void Interpret(Queue q, ILGenerator il)
         {
-            System.Collections.IEnumerator myEnumerator = q.GetEnumerator();
+            IEnumerator myEnumerator = q.GetEnumerator();
 
             char c;
             byte b;
@@ -373,32 +474,37 @@ namespace Esolangs.Sbf
                 c = (char)q.Dequeue();
 
                 switch (c)
-                {
+                {                    
                     case '▲':
                         Plus(il, CountDuplicates(q, c));
                         break;
-
                     case '▼':
                         Minus(il, CountDuplicates(q, c));
                         break;
 
-                    case '→':
-                        Forward(il, CountDuplicates(q, c));
+                    case '²':
+                        Double(il);
+                        break;                    
+                    case '½':
+                        Halve(il);
                         break;
 
+                    case '→':
+                        IncrementPointer(il, CountDuplicates(q, c));
+                        break;
                     case '←':
-                        Back(il, CountDuplicates(q, c));
+                        DecrementPointer(il, CountDuplicates(q, c));
                         break;
 
                     case '¿':
                         Read(il);
                         break;
-
                     case '¡':
                         Write(il);
                         break;
 
                     case '≤':
+                        #region Loops
                         {
                             if (q.Count > 0)
                             {
@@ -474,6 +580,39 @@ namespace Esolangs.Sbf
                                 il.MarkLabel(endLabel);
                             }
                         }
+                        break;
+                    #endregion
+
+                    case 'α':
+                        SwapRegister(il, α);
+                        break;
+                    case 'ß':
+                        SwapRegister(il, ß);
+                        break;
+                    case 'π':
+                        SwapRegister(il, π);
+                        break;
+                    case 'σ':
+                        SwapRegister(il, σ);
+                        break;
+                    case 'µ':
+                        SwapRegister(il, µ);
+                        break;
+                    case 'δ':
+                        SwapRegister(il, δ);
+                        break;
+                    case 'φ':
+                        SwapRegister(il, φ);
+                        break;
+                    case 'ε':
+                        SwapRegister(il, ε);
+                        break;
+
+                    case '↨':
+                        Reference(il);
+                        break;
+                    case '⌂':
+                        Dereference(il);
                         break;
 
                     default:
