@@ -29,3 +29,9 @@ Memory
     δ   235   Swap register δ with cell
     φ   237   Swap register φ with cell
     ε   238   Swap register ε with cell
+
+Bitwise Operations
+    ¬   172   Binary NOT cell
+    ∨ U+2228 Binary OR cell and next cell 
+    ∧ U+2227 Binary AND cell and next cell
+    ⊕  U+2295 Binary XOR cell and next cell
