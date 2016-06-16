@@ -1,0 +1,68 @@
+﻿Set up constants
+
+▲▲²²²²²▲        α     Store 'A' in first register
+▲▲²²²▼▼▼▼²²²▲   ß     Store 'a' in second register
+▲▲²²²²          π     Store ' ' in third register
+
+▲▲²²²²²²        µ     Store 128 (output address)
+▲▲²²²²²²²       δ     Store 256 (copy address)
+
+Seed output
+
+µ → δ ⌂               Go to copy address 
+
+	Copy capital letter references
+	
+	α                 Set copy address to 'A'
+	≤
+		→ ▲ ←         Copy for cleaning up registers after procedure
+		← ⌂⌂          Go to output address location
+		▲ →→→→→→ ▲    Copy capital letter seeds
+		←←←←←←← ⌂→⌂   Go to copy location
+		▼             Decrement copy value
+	≥
+	→ α ←             Place value back in first register
+
+	Copy lower case letter references
+
+	ß
+	≤
+		→ ▲ ←
+		← ⌂⌂
+		→▲→▲→▲→▲→→→▲→▲→▲→▲		Copy lowercase letters
+		→→ ⌂→⌂
+		▼
+	≥
+	→ ß ←
+
+	Copy spaces
+
+	π
+	≤
+		→ ▲ ←
+		← ⌂⌂
+		→→→→→▲→→→→→→▲
+		→ ⌂→⌂
+		▼
+	≥
+	→ π
+
+Go to output
+
+⌂⌂					Output state 'Aaaaa Aaaaa '
+
+Print output
+▲▲▲▲▲▲▲¡→           H
+▲▲▲▲¡→              e
+▲▲▲▲▲▲▲▲▲▲▲¡→       l
+▲▲▲▲▲▲▲▲▲▲▲¡→       l
+▲▲▲▲▲▲▲▲▲▲▲▲▲▲¡→    o
+¡→                   
+▲▲▲▲▲▲▲▲▲▲▲
+▲▲▲▲▲▲▲▲▲▲▲¡→       W
+▲▲▲▲▲▲▲▲▲▲▲▲▲▲¡→    o
+▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲¡→ r
+▲▲▲▲▲▲▲▲▲▲▲¡→       l
+▲▲▲¡→               d
+▲¡                  !
+
