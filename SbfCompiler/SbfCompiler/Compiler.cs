@@ -40,22 +40,26 @@ namespace SbfCompiler
             asmName = Path.GetFileNameWithoutExtension(fileName);
             asmFileName = Path.GetFileName(Path.ChangeExtension(fileName, ".exe"));
 
-            AssemblyName myAsmName = new AssemblyName();
-            myAsmName.Name = asmName;
+            AssemblyName myAsmName = new AssemblyName { Name = asmName };
 
             myAsmBldr = Thread.GetDomain().DefineDynamicAssembly(myAsmName, AssemblyBuilderAccess.RunAndSave);
 
             Type[] temp1 = { typeof(Char) };
             writeMI = typeof(Console).GetMethod("Write", temp1);
             readMI = typeof(Console).GetMethod("Read");
-
-            // .class private auto ansi sbfout extends [mscorlib]System.Object
+            
             ModuleBuilder myModuleBldr = myAsmBldr.DefineDynamicModule(asmFileName, asmFileName);
             myTypeBldr = myModuleBldr.DefineType(asmName);
         }
 
         #region Private Methods
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="il"></param>
+        /// <param name="count"></param>
         private void Add(ILGenerator il, int count)
         {
             switch (count)
@@ -623,18 +627,11 @@ namespace SbfCompiler
         #endregion
 
         public Type Compile()
-        {
-            // .field private static int32 pointer
-            pointer = myTypeBldr.DefineField(nameof(pointer), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-
-            // .field private static int32[] tape
+        {            
+            pointer = myTypeBldr.DefineField(nameof(pointer), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);         
             tape = myTypeBldr.DefineField(nameof(tape), typeof(Array), FieldAttributes.Private | FieldAttributes.Static);
-
-            // .field private static int32 tmp
             tmp = myTypeBldr.DefineField(nameof(tmp), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-
-
-            // .field private static int32 [reg]
+            
             a = myTypeBldr.DefineField(nameof(a), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
             b = myTypeBldr.DefineField(nameof(b), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
             c = myTypeBldr.DefineField(nameof(c), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
@@ -644,7 +641,6 @@ namespace SbfCompiler
             g = myTypeBldr.DefineField(nameof(g), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
             h = myTypeBldr.DefineField(nameof(h), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
 
-            // .method private static int32 main() cil managed
             MethodBuilder mainBldr = myTypeBldr.DefineMethod(
                "main",
                (MethodAttributes)(MethodAttributes.Private | MethodAttributes.Static),
@@ -654,31 +650,23 @@ namespace SbfCompiler
 
             ILGenerator il = mainBldr.GetILGenerator();
 
-
-            // ldc.i4 30000
+            // Allocate 640k of memory, the most anyone would ever need.
             il.Emit(OpCodes.Ldc_I4, 160000);
-            // newarr [mscorlib]System.Int32
             il.Emit(OpCodes.Newarr, typeof(int));
-            // stsfld int32[] sbfout.tape
             il.Emit(OpCodes.Stsfld, tape);
 
-            // ldc.i4 0
+            // Set pointer to 0 (redundant?)
             il.Emit(OpCodes.Ldc_I4_0);
-            // stsfld int32 sbfout.pointer
             il.Emit(OpCodes.Stsfld, pointer);
 
 
             Parse(il);
 
 
-            // ldsfld int32[] sbfout.tape
-            il.Emit(OpCodes.Ldsfld, tape);
-            // ldsfld int32 sbfout.pointer
-            il.Emit(OpCodes.Ldsfld, pointer);
-            // ldelem.i4 
-            il.Emit(OpCodes.Ldelem_I4);
-
-            // ret
+            // Return the value of the current cell
+            il.Emit(OpCodes.Ldsfld, tape);            
+            il.Emit(OpCodes.Ldsfld, pointer);            
+            il.Emit(OpCodes.Ldelem_I4);            
             il.Emit(OpCodes.Ret);
 
 
