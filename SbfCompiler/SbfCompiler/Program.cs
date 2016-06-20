@@ -1,5 +1,4 @@
-﻿using System;
-using SbfCompiler;
+﻿using SbfCompiler;
 
 namespace Esolangs.Sbf
 {
@@ -13,15 +12,25 @@ namespace Esolangs.Sbf
         /// </summary>
         static void Main(string[] args)
         {
-            //if (args.Length > 0)
-            //{
-            string fileName = /*args[0]*/ @"hello.sbf";
+            if (args.Length < 1)
+            {
+                string fileName = @"hello.sbf";
 
-            Compiler compiler;
-            compiler = new Compiler(fileName);
+                Compiler compiler;
+                compiler = new Compiler(fileName);
 
-            Type myType = compiler.Compile();
-            //}
+                compiler.Compile();
+            }
+            else
+            {
+                foreach (string fileName in args)
+                {
+                    Compiler compiler;
+                    compiler = new Compiler(fileName);
+
+                    compiler.Compile();
+                }
+            }
         }        
     };
 }

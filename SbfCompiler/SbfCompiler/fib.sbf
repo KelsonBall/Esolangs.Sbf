@@ -1,0 +1,27 @@
+﻿▲²²²²²²²²²² →
+▲²²²²²      ⌂
+
+← ▲²²▲²² →			Set loop counter to 40
+→ ▲ →				Seed Lucas Numbers 0, 1
+↨ σ ← ← ← ←	σ		Store end of sequence pointer
+→
+Loop
+
+≤
+	▼				Decrement Loop Counter
+	α ↨ µ α			Store loop counter in µ
+	← ⌂	←			Jump to end of sequence
+	« → »			Duplicate last element
+	← ←
+	≤				Add second to last element
+		→ → ▲
+		← ← ▼
+	≥
+	→ → → ↨ σ		Store new end of sequence pointer
+	→ µ ⌂			Jump to loop counter
+	← σ →			Place end of sequence pointer
+≥
+→ →
+≤
+	ß⌂⌂⌂ß
+≥

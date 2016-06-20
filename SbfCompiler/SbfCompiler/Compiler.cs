@@ -28,8 +28,9 @@ namespace SbfCompiler
         private FieldBuilder f;
         private FieldBuilder g;
         private FieldBuilder h;
+        private FieldBuilder clipboard;
 
-        private TypeBuilder myTypeBldr;
+        private TypeBuilder application;
 
         private MethodInfo readMI;
         private MethodInfo writeMI;
@@ -43,13 +44,12 @@ namespace SbfCompiler
             AssemblyName myAsmName = new AssemblyName { Name = asmName };
 
             myAsmBldr = Thread.GetDomain().DefineDynamicAssembly(myAsmName, AssemblyBuilderAccess.RunAndSave);
-
-            Type[] temp1 = { typeof(Char) };
-            writeMI = typeof(Console).GetMethod("Write", temp1);
+            
+            writeMI = typeof(Console).GetMethod("Write", new[]{ typeof(char) });
             readMI = typeof(Console).GetMethod("Read");
             
             ModuleBuilder myModuleBldr = myAsmBldr.DefineDynamicModule(asmFileName, asmFileName);
-            myTypeBldr = myModuleBldr.DefineType(asmName);
+            application = myModuleBldr.DefineType(asmName);
         }
 
         #region Private Methods
@@ -238,11 +238,7 @@ namespace SbfCompiler
 
         private void Double(ILGenerator il)
         {
-            // Push tape to stack            
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            // Push pointer to stack
-            il.Emit(OpCodes.Ldsfld, pointer);
+            PushCellRef(il);
 
             // Load element from tape
             il.Emit(OpCodes.Ldelem_I4);
@@ -256,11 +252,7 @@ namespace SbfCompiler
             // Set result to temp
             il.Emit(OpCodes.Stsfld, tmp);
 
-            // Push tape
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            // Push pointer
-            il.Emit(OpCodes.Ldsfld, pointer);
+            PushCellRef(il);
 
             // Push temp
             il.Emit(OpCodes.Ldsfld, tmp);
@@ -271,17 +263,28 @@ namespace SbfCompiler
 
         private void Halve(ILGenerator il)
         {            
-            throw new NotImplementedException();
-        }
+            PushCellRef(il);
 
+            il.Emit(OpCodes.Ldelem_I4);
+
+            il.Emit(OpCodes.Ldc_I4_2);
+
+            il.Emit(OpCodes.Div);
+
+            il.Emit(OpCodes.Stsfld, tmp);
+
+            PushCellRef(il);
+
+            il.Emit(OpCodes.Ldsfld, tmp);
+
+            il.Emit(OpCodes.Stelem_I4);
+
+
+        }
 
         private void SwapRegister(ILGenerator il, FieldBuilder reg)
         {            
-            // Add tape to stack
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            // Add pointer to stack
-            il.Emit(OpCodes.Ldsfld, pointer);
+            PushCellRef(il);
 
             // Add tape[pointer] to stack
             il.Emit(OpCodes.Ldelem_I4);
@@ -289,11 +292,7 @@ namespace SbfCompiler
             // Set tmp to tape[pointer]
             il.Emit(OpCodes.Stsfld, tmp);
 
-            // Add tape to stack
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            // Add pointer to stack
-            il.Emit(OpCodes.Ldsfld, pointer);
+            PushCellRef(il);
 
             // Load selected register to stack
             il.Emit(OpCodes.Ldsfld, reg);
@@ -308,57 +307,40 @@ namespace SbfCompiler
             il.Emit(OpCodes.Stsfld, reg);
         }
 
-
-        private void BinaryNot(ILGenerator il)
+        private void CopyToRegister(ILGenerator il)
         {
-            throw new NotImplementedException();
+            PushCellRef(il);
+
+            il.Emit(OpCodes.Ldelem_I4);
+
+            il.Emit(OpCodes.Stsfld, clipboard);
         }
 
-        private void BinaryOr(ILGenerator il)
+        private void PasteFromRegister(ILGenerator il)
         {
-            throw new NotImplementedException();
-        }
+            PushCellRef(il);
 
-        private void BinaryAnd(ILGenerator il)
-        {
-            throw new NotImplementedException();
-        }
+            il.Emit(OpCodes.Ldsfld, clipboard);
 
-        private void BinaryXor(ILGenerator il)
-        {
-            throw new NotImplementedException();
+            il.Emit(OpCodes.Stelem_I4);
         }
-
 
         private void Read(ILGenerator il)
         {
 
-            //ldsfld int32[] sbfout.tape
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            //ldsfld int32 sbfout.pointer
-            il.Emit(OpCodes.Ldsfld, pointer);
-
-            //call void [mscorlib]System.Console.Write(char)
+            PushCellRef(il);
+            
             il.EmitCall(OpCodes.Call, readMI, null);
 
-            //stelem.i4
             il.Emit(OpCodes.Stelem_I4);
         }
 
         private void Write(ILGenerator il)
         {
+            PushCellRef(il);
 
-            //ldsfld int32[] sbfout.tape
-            il.Emit(OpCodes.Ldsfld, tape);
-
-            //ldsfld int32 sbfout.pointer
-            il.Emit(OpCodes.Ldsfld, pointer);
-
-            //ldelem.i4 
             il.Emit(OpCodes.Ldelem_I4);
-
-            //call void [mscorlib]System.Console.Write(char)
+            
             il.EmitCall(OpCodes.Call, writeMI, null);
         }
 
@@ -400,6 +382,12 @@ namespace SbfCompiler
             il.Emit(OpCodes.Stelem_I4);
         }
 
+        private void PushCellRef(ILGenerator il)
+        {
+            il.Emit(OpCodes.Ldsfld, tape);
+
+            il.Emit(OpCodes.Ldsfld, pointer);
+        }
 
         private void Parse(ILGenerator il)
         {
@@ -469,8 +457,7 @@ namespace SbfCompiler
         {
             IEnumerator myEnumerator = q.GetEnumerator();
 
-            char c;
-            byte b;
+            char c;            
 
             while (q.Count > 0)
             {
@@ -610,7 +597,12 @@ namespace SbfCompiler
                     case 'ε':
                         SwapRegister(il, h);
                         break;
-
+                    case '«':
+                        CopyToRegister(il);
+                        break;
+                    case '»':
+                        PasteFromRegister(il);
+                        break;
                     case '↨':
                         Reference(il);
                         break;
@@ -628,22 +620,26 @@ namespace SbfCompiler
 
         public Type Compile()
         {            
-            pointer = myTypeBldr.DefineField(nameof(pointer), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);         
-            tape = myTypeBldr.DefineField(nameof(tape), typeof(Array), FieldAttributes.Private | FieldAttributes.Static);
-            tmp = myTypeBldr.DefineField(nameof(tmp), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            pointer = application.DefineField(nameof(pointer), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);         
+            tape = application.DefineField(nameof(tape), typeof(Array), FieldAttributes.Private | FieldAttributes.Static);
+            tmp = application.DefineField(nameof(tmp), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
             
-            a = myTypeBldr.DefineField(nameof(a), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            b = myTypeBldr.DefineField(nameof(b), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            c = myTypeBldr.DefineField(nameof(c), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            d = myTypeBldr.DefineField(nameof(d), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            e = myTypeBldr.DefineField(nameof(e), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            f = myTypeBldr.DefineField(nameof(f), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            g = myTypeBldr.DefineField(nameof(g), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
-            h = myTypeBldr.DefineField(nameof(h), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            a = application.DefineField(nameof(a), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            b = application.DefineField(nameof(b), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            c = application.DefineField(nameof(c), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            d = application.DefineField(nameof(d), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            e = application.DefineField(nameof(e), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            f = application.DefineField(nameof(f), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            g = application.DefineField(nameof(g), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            h = application.DefineField(nameof(h), typeof(Int32), FieldAttributes.Private | FieldAttributes.Static);
+            clipboard = application.DefineField(
+                nameof(clipboard),
+                typeof(Int32),
+                FieldAttributes.Private | FieldAttributes.Static);
 
-            MethodBuilder mainBldr = myTypeBldr.DefineMethod(
+            MethodBuilder mainBldr = application.DefineMethod(
                "main",
-               (MethodAttributes)(MethodAttributes.Private | MethodAttributes.Static),
+               MethodAttributes.Private | MethodAttributes.Static,
                typeof(Int32),
                null
                );
@@ -670,7 +666,7 @@ namespace SbfCompiler
             il.Emit(OpCodes.Ret);
 
 
-            Type sbfoutType = myTypeBldr.CreateType();
+            Type sbfoutType = application.CreateType();
             myAsmBldr.SetEntryPoint(mainBldr);
             myAsmBldr.Save(asmFileName);
             Console.WriteLine($"Assembly saved as '{asmFileName}'.");
